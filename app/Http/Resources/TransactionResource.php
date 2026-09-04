@@ -17,10 +17,10 @@ class TransactionResource extends JsonResource
         return [
             'id' => $this->id,
             'type' => $this->type->value,
-            'amount' => (string) $this->amount,
+            'amount' => (string)$this->amount,
             'instrument' => $this->instrument,
             'quantity' => $this->quantity,
-            'price_per_unit' => $this->price_per_unit !== null ? (string) $this->price_per_unit : null,
+            'price_per_unit' => $this->price_per_unit !== null ? (string)$this->price_per_unit : null,
             'created_at' => $this->created_at->toIso8601String(),
         ];
     }

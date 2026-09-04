@@ -13,7 +13,7 @@ class Transaction extends Model
 
     // We don't need timestamps for this model because is immutable, so we need only 'created_at'
     // so we don't need to update a transaction
-    public $timestamps = false;
+    const UPDATED_AT = null;
 
     protected $fillable = [
         'client_id', 'type', 'amount', 'instrument', 'quantity', 'price_per_unit',
