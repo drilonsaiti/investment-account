@@ -18,6 +18,7 @@ class Client extends Model
 
     public function transactions(): HasMany
     {
-        return $this->hasMany(Transaction::class);
+        return $this->hasMany(Transaction::class)
+            ->latest();
     }
 }
