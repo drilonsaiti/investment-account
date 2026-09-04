@@ -11,5 +11,6 @@ final readonly class AccountData
         public Client     $client,
         public Collection $holdings,
     )
-    {}
+    {
+    }
 }

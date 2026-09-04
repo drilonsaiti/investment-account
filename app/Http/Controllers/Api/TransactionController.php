@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Actions\CreateTransactionAction;
+use App\Actions\ListTransactionsAction;
 use App\Exceptions\InsufficientFundsException;
 use App\Exceptions\InsufficientHoldingsException;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ListTransactionsRequest;
 use App\Http\Requests\StoreTransactionRequest;
 use App\Http\Resources\TransactionResource;
 use App\Models\Client;
@@ -13,10 +15,10 @@ use Illuminate\Http\JsonResponse;
 
 class TransactionController extends Controller
 {
-    public function index(Client $client): JsonResponse
+    public function index(ListTransactionsRequest $request, Client $client, ListTransactionsAction $action): JsonResponse
     {
         return TransactionResource::collection(
-            $client->transactions()->latest('id')->paginate(20)
+            $action->execute($client, $request->validated())
         )->response();
     }
 

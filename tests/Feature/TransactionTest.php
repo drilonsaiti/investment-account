@@ -330,4 +330,52 @@ class TransactionTest extends TestCase
             'type' => 'not_a_real_type', 'amount' => 100,
         ])->assertStatus(422);
     }
+
+    public function test_transactions_can_be_filtered_by_type(): void
+    {
+        $client = Client::factory()->create();
+
+        $this->postJson(route('transactions.store', $client), [
+            'type' => TransactionType::Deposit, 'amount' => 1000,
+        ]);
+
+        $this->postJson(route('transactions.store', $client), [
+            'type' => TransactionType::Buy, 'instrument' => 'AAPL', 'quantity' => 2, 'price_per_unit' => 100,
+        ]);
+
+        $this->getJson(route('transactions.index', $client) . '?type=buy')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.type', 'buy');
+    }
+
+    public function test_transactions_can_be_filtered_by_instrument(): void
+    {
+        $client = Client::factory()->create();
+
+        $this->postJson(route('transactions.store', $client), [
+            'type' => TransactionType::Deposit, 'amount' => 1000,
+        ]);
+
+        $this->postJson(route('transactions.store', $client), [
+            'type' => TransactionType::Buy, 'instrument' => 'AAPL', 'quantity' => 2, 'price_per_unit' => 100,
+        ]);
+
+        $this->postJson(route('transactions.store', $client), [
+            'type' => TransactionType::Buy, 'instrument' => 'TSLA', 'quantity' => 1, 'price_per_unit' => 200,
+        ]);
+
+        $this->getJson(route('transactions.index', $client) . '?instrument=TSLA')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.instrument', 'TSLA');
+    }
+
+    public function test_invalid_transaction_type_filter_is_rejected(): void
+    {
+        $client = Client::factory()->create();
+
+        $this->getJson(route('transactions.index', $client) . '?type=invalid')
+            ->assertUnprocessable();
+    }
 }

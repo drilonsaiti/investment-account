@@ -22,7 +22,7 @@ class AccountResource extends JsonResource
             'cash_balance' => (string)$this->client->cash_balance,
             'holdings' => $this->holdings->map(fn($holding) => [
                 'instrument' => $holding->instrument,
-                'quantity' => (int) $holding->net_quantity,
+                'quantity' => (int)$holding->net_quantity,
             ]),
         ];
     }
