@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Enums\TransactionType;
 use App\Models\Client;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 
 class TransactionTest extends TestCase
@@ -199,5 +198,53 @@ class TransactionTest extends TestCase
 
     }
 
+    public function test_transaction_for_nonexistent_client_returns_404(): void
+    {
+        $nonExistentClientId = 9999;
 
+        $this->postJson(
+            route('transactions.store', [$nonExistentClientId]),
+            [
+                'type' => 'deposit',
+                'amount' => 100,
+            ]
+        )->assertStatus(404);
+    }
+
+    public function test_withdrawal_equal_to_full_balance_succeeds(): void
+    {
+        $client = Client::factory()->create(['cash_balance' => 300]);
+
+        $response = $this->postJson(route('transactions.store', $client), [
+            'type' => TransactionType::Withdrawal,
+            'amount' => 300,
+        ]);
+
+        $response->assertCreated();
+        $this->assertEquals('0.00', $client->fresh()->cash_balance);
+    }
+
+    public function test_sell_equal_to_full_holding_succeeds(): void
+    {
+        $client = Client::factory()->create(['cash_balance' => 1000]);
+
+        $this->postJson(route('transactions.store', $client), [
+            'type' => TransactionType::Buy,
+            'instrument' => 'AAPL',
+            'quantity' => 5,
+            'price_per_unit' => 100,
+        ]);
+
+        $response = $this->postJson(route('transactions.store', $client), [
+            'type' => TransactionType::Sell,
+            'instrument' => 'AAPL',
+            'quantity' => 5,
+            'price_per_unit' => 100,
+        ]);
+
+        $response->assertCreated();
+
+        $account = $this->getJson(route('clients.account', $client))->json()['data'];
+        $this->assertEquals([], $account['holdings']);
+    }
 }

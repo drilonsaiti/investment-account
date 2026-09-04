@@ -17,7 +17,7 @@ class ClientResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
-            'cash_balance' => (string) $this->cash_balance
+            'cash_balance' => (string)$this->cash_balance
         ];
     }
 }

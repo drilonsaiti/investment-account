@@ -10,7 +10,6 @@ use App\Http\Requests\StoreTransactionRequest;
 use App\Http\Resources\TransactionResource;
 use App\Models\Client;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class TransactionController extends Controller
 {

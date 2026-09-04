@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\TransactionType;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -29,5 +30,22 @@ class Transaction extends Model
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class);
+    }
+
+    public function scopeHoldings(Builder $query): Builder
+    {
+        return $query
+            ->whereNotNull('instrument')
+            ->selectRaw("
+            instrument,
+            SUM(
+                CASE
+                    WHEN type = 'buy' THEN quantity
+                    WHEN type = 'sell' THEN -quantity
+                    ELSE 0
+                END
+            ) as net_quantity
+        ")
+            ->groupBy('instrument');
     }
 }

@@ -23,6 +23,6 @@ enum TransactionType: string
 
     public function requiresInstrument(): bool
     {
-        return in_array($this, [self::Buy, self::Sell],true);
+        return in_array($this, [self::Buy, self::Sell], true);
     }
 }

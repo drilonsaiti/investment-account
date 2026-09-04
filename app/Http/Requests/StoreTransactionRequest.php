@@ -25,26 +25,26 @@ class StoreTransactionRequest extends FormRequest
     public function rules(): array
     {
         return [
-           'type' => ['required', Rule::enum(TransactionType::class)],
+            'type' => ['required', Rule::enum(TransactionType::class)],
             'amount' => [
-                Rule::requiredIf(fn () => !$this->typeRequiresInstrument()),
-                Rule::prohibitedIf(fn () => $this->typeRequiresInstrument()),
-                'nullable', 'numeric', 'gt:0',
+                Rule::requiredIf(fn() => !$this->typeRequiresInstrument()),
+                Rule::prohibitedIf(fn() => $this->typeRequiresInstrument()),
+                'nullable', 'numeric', 'gt:0', 'decimal:0,2',
             ],
             'instrument' => [
-                Rule::requiredIf(fn () => $this->typeRequiresInstrument()),
-                Rule::prohibitedIf(fn () => !$this->typeRequiresInstrument()),
+                Rule::requiredIf(fn() => $this->typeRequiresInstrument()),
+                Rule::prohibitedIf(fn() => !$this->typeRequiresInstrument()),
                 'nullable', 'string', 'max:20'
-                ],
+            ],
             'quantity' => [
-                Rule::requiredIf(fn () => $this->typeRequiresInstrument()),
-                Rule::prohibitedIf(fn () => !$this->typeRequiresInstrument()),
+                Rule::requiredIf(fn() => $this->typeRequiresInstrument()),
+                Rule::prohibitedIf(fn() => !$this->typeRequiresInstrument()),
                 'nullable', 'integer', 'min:1',
             ],
             'price_per_unit' => [
-                Rule::requiredIf(fn () => $this->typeRequiresInstrument()),
-                Rule::prohibitedIf(fn () => !$this->typeRequiresInstrument()),
-                'nullable', 'numeric', 'gt:0',
+                Rule::requiredIf(fn() => $this->typeRequiresInstrument()),
+                Rule::prohibitedIf(fn() => !$this->typeRequiresInstrument()),
+                'nullable', 'numeric', 'gt:0', 'decimal:0,4',
             ],
         ];
     }

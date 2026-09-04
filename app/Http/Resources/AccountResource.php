@@ -16,11 +16,14 @@ class AccountResource extends JsonResource
     {
         return [
             'client' => [
-                'id' => $this->resource['client']->id,
-                'name' => $this->resource['client']->name,
+                'id' => $this->client->id,
+                'name' => $this->client->name,
             ],
-            'cash_balance' => (string) $this->resource['client']->cash_balance,
-            'holdings' => $this->resource['holdings'],
+            'cash_balance' => (string)$this->client->cash_balance,
+            'holdings' => $this->holdings->map(fn($holding) => [
+                'instrument' => $holding->instrument,
+                'quantity' => (int) $holding->net_quantity,
+            ]),
         ];
     }
 }

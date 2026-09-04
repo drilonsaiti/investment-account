@@ -10,7 +10,7 @@ class Client extends Model
 {
     use Hasfactory;
 
-    protected $fillable = ['name','cash_balance'];
+    protected $fillable = ['name', 'cash_balance'];
 
     protected $casts = [
         'cash_balance' => 'decimal:2'
@@ -20,4 +20,5 @@ class Client extends Model
     {
         return $this->hasMany(Transaction::class);
     }
+
 }

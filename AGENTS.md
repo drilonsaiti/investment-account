@@ -12,7 +12,8 @@ php -v
 composer -V
 ```
 
-If either command is unavailable, detect the user's operating system and install the prerequisites with the appropriate command:
+If either command is unavailable, detect the user's operating system and install the prerequisites with the appropriate
+command:
 
 macOS:
 
@@ -32,7 +33,8 @@ Linux:
 /bin/bash -c "$(curl -fsSL https://php.new/install/linux/8.5)"
 ```
 
-After installation, ask the user to restart their terminal. If the agent needs the restarted shell to continue, ask the user to reopen their terminal and rerun their original prompt.
+After installation, ask the user to restart their terminal. If the agent needs the restarted shell to continue, ask the
+user to reopen their terminal and rerun their original prompt.
 
 ## Agent Setup
 
@@ -43,5 +45,6 @@ composer require laravel/boost --dev
 php artisan boost:install
 ```
 
-Boost replaces these bootstrap instructions with guidelines tailored to the application. After installation, read `AGENTS.md` again and continue with the user's original request using the generated guidelines.
+Boost replaces these bootstrap instructions with guidelines tailored to the application. After installation, read
+`AGENTS.md` again and continue with the user's original request using the generated guidelines.
 </laravel-boost-guidelines>
