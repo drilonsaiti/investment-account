@@ -12,10 +12,6 @@ class Client extends Model
 
     protected $fillable = ['name', 'cash_balance'];
 
-    protected $casts = [
-        'cash_balance' => 'decimal:2'
-    ];
-
     protected function casts(): array
     {
         return [

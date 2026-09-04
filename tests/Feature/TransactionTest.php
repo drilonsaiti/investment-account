@@ -292,4 +292,42 @@ class TransactionTest extends TestCase
         $response->assertCreated();
         $response->assertJsonPath('data.amount', '200.00');
     }
+
+    public function test_zero_amount_is_rejected(): void
+    {
+        $client = Client::factory()->create();
+
+        $this->postJson(route('transactions.store', $client), [
+            'type' => TransactionType::Deposit, 'amount' => 0,
+        ])->assertStatus(422);
+    }
+
+    public function test_zero_quantity_is_rejected(): void
+    {
+        $client = Client::factory()->create(['cash_balance' => 1000]);
+
+        $this->postJson(route('transactions.store', $client), [
+            'type' => TransactionType::Buy, 'instrument' => 'AAPL',
+            'quantity' => 0, 'price_per_unit' => 100,
+        ])->assertStatus(422);
+    }
+
+    public function test_zero_price_is_rejected(): void
+    {
+        $client = Client::factory()->create(['cash_balance' => 1000]);
+
+        $this->postJson(route('transactions.store', $client), [
+            'type' => TransactionType::Buy, 'instrument' => 'AAPL',
+            'quantity' => 5, 'price_per_unit' => 0,
+        ])->assertStatus(422);
+    }
+
+    public function test_invalid_transaction_type_is_rejected(): void
+    {
+        $client = Client::factory()->create();
+
+        $this->postJson(route('transactions.store', $client), [
+            'type' => 'not_a_real_type', 'amount' => 100,
+        ])->assertStatus(422);
+    }
 }

@@ -12,7 +12,7 @@ return new class extends Migration {
     {
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('client_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('client_id')->constrained()->restrictOnDelete();
             $table->enum('type', array_column(\App\Enums\TransactionType::cases(), 'value'));
             $table->decimal('amount', 15, 2);
             $table->string('instrument')->nullable();

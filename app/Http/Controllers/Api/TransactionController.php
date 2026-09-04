@@ -16,7 +16,7 @@ class TransactionController extends Controller
     public function index(Client $client): JsonResponse
     {
         return TransactionResource::collection(
-            $client->transactions()->latest()->paginate(20)
+            $client->transactions()->latest('id')->paginate(20)
         )->response();
     }
 
