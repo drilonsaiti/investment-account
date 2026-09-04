@@ -13,7 +13,7 @@ full history of movements.
 ## Installation
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/drilonsaiti/investment-account.git
 cd investment-account
 composer install
 cp .env.example .env
