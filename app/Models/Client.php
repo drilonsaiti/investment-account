@@ -8,13 +8,20 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Client extends Model
 {
-    use Hasfactory;
+    use HasFactory;
 
     protected $fillable = ['name', 'cash_balance'];
 
     protected $casts = [
         'cash_balance' => 'decimal:2'
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'cash_balance' => 'decimal:2'
+        ];
+    }
 
     public function transactions(): HasMany
     {

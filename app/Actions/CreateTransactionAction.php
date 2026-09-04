@@ -97,9 +97,9 @@ class CreateTransactionAction
 
     private function currentHolding(Client $client, string $instrument): int
     {
-        return (int) $client->transactions()
+        return (int) ($client->transactions()
             ->holdings()
             ->where('instrument', $instrument)
-            ->value('net_quantity') ?? 0;
+            ->value('net_quantity') ?? 0);
     }
 }

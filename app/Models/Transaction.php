@@ -20,12 +20,15 @@ class Transaction extends Model
         'client_id', 'type', 'amount', 'instrument', 'quantity', 'price_per_unit',
     ];
 
-    protected $casts = [
-        'type' => TransactionType::class,
-        'amount' => 'decimal:2',
-        'price_per_unit' => 'decimal:4',
-        'created_at' => 'datetime',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'type' => TransactionType::class,
+            'amount' => 'decimal:2',
+            'price_per_unit' => 'decimal:4',
+            'created_at' => 'datetime',
+        ];
+    }
 
     public function client(): BelongsTo
     {
