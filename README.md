@@ -1,58 +1,183 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Investment Account API
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A Laravel backend that maintains a ledger of financial movements for investment clients: deposits, withdrawals, and buying/selling instruments. The system always derives the current cash balance and portfolio of each client from the full history of movements.
 
-## About Laravel
+## Requirements
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- PHP 8.3+
+- Composer
+- MySQL 8.0+ (or compatible)
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
-
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
-
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## Installation
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+git clone <repo-url>
+cd investment-account
+composer install
+cp .env.example .env
+php artisan key:generate
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Create the database in MySQL:
+```sql
+CREATE DATABASE investment_account CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
 
-## Contributing
+Configure `.env`:
+```
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=investment_account
+DB_USERNAME=root
+DB_PASSWORD=
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Migrate and seed:
+```bash
+php artisan migrate --seed
+```
 
-## Code of Conduct
+Start the server:
+```bash
+php artisan serve
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+The API is now available at `http://127.0.0.1:8000/api`.
 
-## Security Vulnerabilities
+## Tests
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```bash
+php artisan test
+```
 
-## License
+Tests run against an in-memory SQLite database (configured in `phpunit.xml`), so they never touch your MySQL development database.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Seed data
+
+After `migrate --seed`, the system comes with three clients ready for manual testing:
+
+| Client | Cash | Holdings |
+|---|---|---|
+| Ana (id 1) | 860.00 | AAPL: 2 |
+| Marko (id 2) | 800.00 | TSLA: 10, MSFT: 5 |
+| Elena (id 3) | 0.00 | (empty) |
+
+## API
+
+All responses are JSON. Rate limit: 60 requests/minute per IP.
+
+### `GET /api/clients`
+List of clients (paginated).
+
+**Response:**
+```json
+{
+  "data": [
+    { "id": 1, "name": "Ana", "cash_balance": "860.00" }
+  ],
+  "links": { "...": "..." },
+  "meta": { "...": "..." }
+}
+```
+
+### `GET /api/clients/{id}`
+Basic details of a single client.
+
+**Response:**
+```json
+{ "data": { "id": 1, "name": "Ana", "cash_balance": "860.00" } }
+```
+
+### `GET /api/clients/{id}/account`
+Full account state: cash balance + current holdings (derived from the ledger).
+
+**Response:**
+```json
+{
+  "data": {
+    "client": { "id": 1, "name": "Ana" },
+    "cash_balance": "860.00",
+    "holdings": [
+      { "instrument": "AAPL", "quantity": 2 }
+    ]
+  }
+}
+```
+
+### `GET /api/clients/{id}/transactions`
+Client's movement history (paginated, most recent first).
+
+### `POST /api/clients/{id}/transactions`
+Creates a new movement. The ledger is append-only — there is no update/delete endpoint.
+
+**Fields:**
+- `type`: `deposit` | `withdrawal` | `buy` | `sell` (required)
+- `amount`: positive number — only for `deposit`/`withdrawal`
+- `instrument`, `quantity`, `price_per_unit` — only for `buy`/`sell`
+
+Mismatched field combinations (e.g. `instrument` on a `deposit`) are rejected explicitly.
+
+**Example valid request (buy):**
+```json
+POST /api/clients/1/transactions
+{
+  "type": "buy",
+  "instrument": "AAPL",
+  "quantity": 5,
+  "price_per_unit": 100
+}
+```
+
+**Successful response (201):**
+```json
+{
+  "data": {
+    "id": 12,
+    "type": "buy",
+    "amount": "500.00",
+    "instrument": "AAPL",
+    "quantity": 5,
+    "price_per_unit": "100.0000",
+    "created_at": "2026-09-04T12:00:00+00:00"
+  }
+}
+```
+
+**Example rejected request (insufficient cash):**
+```json
+POST /api/clients/1/transactions
+{
+  "type": "buy",
+  "instrument": "AAPL",
+  "quantity": 999,
+  "price_per_unit": 100
+}
+```
+
+**Response (422):**
+```json
+{
+  "message": "The client does not have enough cash for this transaction."
+}
+```
+
+## Business rules
+
+- **Cash never negative** — WITHDRAWAL and BUY fail if cash is insufficient.
+- **No short selling** — SELL fails if the client doesn't own enough of the instrument.
+- **Immutable ledger** — transactions are only ever appended, never changed or deleted (there is no PUT/DELETE route at all).
+- **Client isolation** — every client is fully independent from every other client.
+- Rejected operations **leave no trace** — no row is written, and state remains identical to before the attempt.
+
+## Why this approach
+
+I keep the cash balance as a stored column on the client, rather than deriving it from the ledger on every read, because I needed something concrete to lock (`SELECT ... FOR UPDATE`) while checking the business rules — otherwise two concurrent requests could read the same "before" state and both pass the sufficient-funds check. Holdings, on the other hand, are always derived from the ledger, because they're multi-dimensional (a new instrument per client at any time) and a separate table for them would add synchronization risk without a real benefit at this scale.
+
+For monetary values I use `bccomp`/`bcmul` instead of native PHP operators, because decimals cast by Eloquent remain strings, and comparing/multiplying them directly would silently convert them to floats — risking precision errors on real money.
+
+The business logic lives in `CreateTransactionAction`, not in the controller, because checking cash/holdings requires reading current state inside a locked transaction — something that doesn't belong in the HTTP layer and needs to be testable on its own.
+
+Form validation (Form Request) is clearly separated from business validation (Action + Exceptions): the first checks whether the shape of the request makes sense, the second checks whether the client's current state allows that operation.
+
+I kept the system deliberately small — no authentication, caching, or extra observers — because none of that was requested, and it would pull focus away from ledger correctness, which I believe is the actual point of this exercise. Things I'd consider for a real production system: authentication with role-based access (e.g. Sanctum), notifications (email/webhook) when a transaction is large or gets rejected, full audit logging of every change, and testing row-locking under real concurrency rather than just in-memory SQLite as the current tests do.
