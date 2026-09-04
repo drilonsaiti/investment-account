@@ -248,7 +248,7 @@ class TransactionTest extends TestCase
         $this->assertEquals([], $account['holdings']);
     }
 
-    public function test_buy_cost_rounds_correctly_when_price_has_many_decimals(): void
+    public function test_buy_cost_is_truncated_to_two_decimal_places(): void
     {
         $client = Client::factory()->create(['cash_balance' => 1000]);
 
@@ -265,7 +265,7 @@ class TransactionTest extends TestCase
         $this->assertEquals('900.01', $client->fresh()->cash_balance);
     }
 
-    public function test_sell_proceeds_round_correctly_when_price_has_many_decimals(): void
+    public function test_sell_proceeds_are_truncated_to_two_decimal_places(): void
     {
         $client = Client::factory()->create(['cash_balance' => 0]);
 
@@ -377,5 +377,15 @@ class TransactionTest extends TestCase
 
         $this->getJson(route('transactions.index', $client) . '?type=invalid')
             ->assertUnprocessable();
+    }
+
+    public function test_non_string_transaction_type_is_rejected(): void
+    {
+        $client = Client::factory()->create();
+
+        $this->postJson(route('transactions.store', $client), [
+            'type' => [],
+            'amount' => 100,
+        ])->assertUnprocessable();
     }
 }

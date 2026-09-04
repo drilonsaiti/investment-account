@@ -51,8 +51,12 @@ class StoreTransactionRequest extends FormRequest
 
     private function typeRequiresInstrument(): bool
     {
-        $type = TransactionType::tryFrom($this->input('type'));
+        $type = $this->input('type');
 
-        return $type?->requiresInstrument() ?? false;
+        if (!is_string($type)) {
+            return false;
+        }
+
+        return TransactionType::tryFrom($type)?->requiresInstrument() ?? false;
     }
 }

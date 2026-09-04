@@ -154,9 +154,8 @@ Creates a new movement. The ledger is append-only — there is no update/delete 
 Mismatched field combinations (e.g. `instrument` on a `deposit`) are rejected explicitly.
 
 **Example valid request (buy):**
-
-```json
 POST /api/clients/1/transactions
+```json
 {
     "type": "buy",
     "instrument": "AAPL",
@@ -182,9 +181,8 @@ POST /api/clients/1/transactions
 ```
 
 **Example rejected request (insufficient cash):**
-
-```json
 POST /api/clients/1/transactions
+```json
 {
     "type": "buy",
     "instrument": "AAPL",
