@@ -217,12 +217,20 @@ POST /api/clients/1/transactions
 I keep the cash balance as a stored column on the client, rather than deriving it from the ledger on every read, because
 I needed something concrete to lock (`SELECT ... FOR UPDATE`) while checking the business rules — otherwise two
 concurrent requests could read the same "before" state and both pass the sufficient-funds check. Holdings, on the other
-hand, are always derived from the ledger, because they're multi-dimensional (a new instrument per client at any time)and
+hand, are always derived from the ledger, because they're multi-dimensional (a new instrument per client at any time) and
 a separate table for them would add synchronization risk without a real benefit at this scale.
+
+I chose pessimistic locking (`lockForUpdate()`) over optimistic locking (a version column + retry-on-conflict) for concurrency control.
+Optimistic locking scales better under high read/low-write contention, but for financial writes I'd rather a second request wait briefly than fail and need
+a retry — correctness and simplicity win over throughput at this scale, and the number of concurrent writes per single client account is realistically very low.
 
 For monetary values I use `bccomp`/`bcmul` instead of native PHP operators, because decimals cast by Eloquent remain
 strings, and comparing/multiplying them directly would silently convert them to floats — risking precision errors on
 real money.
+
+One subtlety worth noting: `bcmul()` truncates rather than rounds at the given scale (e.g. `3 × 33.333 = 99.999` truncates to `99.99`, not `100.00`). I kept
+this default rather than adding explicit rounding logic, since the spec doesn't define a rounding policy and truncation is a defensible, consistent
+choice for a broker-style system (never rounds in the client's favor). This would be worth clarifying with the business before a production release.
 
 The business logic lives in `CreateTransactionAction`, not in the controller, because checking cash/holdings requires
 reading current state inside a locked transaction — something that doesn't belong in the HTTP layer and needs to be

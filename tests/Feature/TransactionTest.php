@@ -247,4 +247,49 @@ class TransactionTest extends TestCase
         $account = $this->getJson(route('clients.account', $client))->json()['data'];
         $this->assertEquals([], $account['holdings']);
     }
+
+    public function test_buy_cost_rounds_correctly_when_price_has_many_decimals(): void
+    {
+        $client = Client::factory()->create(['cash_balance' => 1000]);
+
+        // 3 x 33.333 = 99.999 -> bcmul TRUNCATES (not rounds) at scale 2 -> 99.99
+        $response = $this->postJson(route('transactions.store', $client), [
+            'type' => TransactionType::Buy,
+            'instrument' => 'XYZ',
+            'quantity' => 3,
+            'price_per_unit' => 33.333,
+        ]);
+
+        $response->assertCreated();
+        $response->assertJsonPath('data.amount', '99.99');
+        $this->assertEquals('900.01', $client->fresh()->cash_balance);
+    }
+
+    public function test_sell_proceeds_round_correctly_when_price_has_many_decimals(): void
+    {
+        $client = Client::factory()->create(['cash_balance' => 0]);
+
+        $this->postJson(route('transactions.store', $client), [
+            'type' => TransactionType::Deposit,
+            'amount' => 1000,
+        ]);
+
+        // 3 x 66.667 = 200.001 -> bcmul TRUNCATES at scale 2 -> 200.00
+        $this->postJson(route('transactions.store', $client), [
+            'type' => TransactionType::Buy,
+            'instrument' => 'XYZ',
+            'quantity' => 3,
+            'price_per_unit' => 33.333,
+        ]);
+
+        $response = $this->postJson(route('transactions.store', $client), [
+            'type' => TransactionType::Sell,
+            'instrument' => 'XYZ',
+            'quantity' => 3,
+            'price_per_unit' => 66.667,
+        ]);
+
+        $response->assertCreated();
+        $response->assertJsonPath('data.amount', '200.00');
+    }
 }
